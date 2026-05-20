@@ -33,23 +33,20 @@ Examples:
 
 In GNNs, each node learns information from its neighboring nodes.
 
-General Message Passing Formula:
 
-$$
-\mathbf{h}_v^{(k)} =
-\text{UPDATE}^{(k)}
-\left(
-\mathbf{h}_v^{(k-1)},
-\text{AGGREGATE}^{(k)}
-\left(
-\left\{
-\mathbf{h}_u^{(k-1)} :
-u \in \mathcal{N}(v)
-\right\}
-\right)
-\right)
-$$
+## General Message Passing Formula
 
+```math
+h_v^{(k)} =
+UPDATE^{(k)}
+\Big(
+h_v^{(k-1)},
+AGGREGATE^{(k)}
+(
+\{ h_u^{(k-1)} : u \in N(v) \}
+)
+\Big)
+```
 Where:
 - AGGREGATE -> collects neighbor information
 - UPDATE -> updates node representation
@@ -110,21 +107,4 @@ The goal of this repository is to understand:
 - Graph based Deep Learning
 
 ---
-
-# Author
-
-Akash Pandey
-
-Computer Science Undergraduate  
-VIT Bhopal University
-
----
-
-# Future Improvements
-
-- Graph Convolutional Networks (GCN)
-- Graph Attention Networks (GAT)
-- Node Classification
-- Link Prediction
-- Graph Classification
-- Real-world datasets
+-
