@@ -1,309 +1,551 @@
-# GraphicalNeuralNetwork
+# PyTorch Geometric Graph Neural Networks
 
-A beginner-friendly implementation and explanation of Graph Neural Networks (GNNs) using PyTorch Geometric (PyG).
-
-This repository demonstrates the fundamentals of Graph Neural Networks, Message Passing, Node Classification, and Graph Representation Learning through practical implementations on real-world graph datasets such as the Cora Citation Network and Zachary’s Karate Club Network.
+## Node Classification, Graph Classification & Scalable GNN Training using PyTorch Geometric
 
 ---
 
-# Project Overview
+# Overview
 
-Graph Neural Networks (GNNs) are Deep Learning models specifically designed for graph structured data.
+This repository contains implementations and experiments on Graph Neural Networks (GNNs) using PyTorch and PyTorch Geometric.
 
-Unlike traditional neural networks, GNNs are capable of learning not only from node features, but also from the relationships and connections between nodes.
+The project covers:
 
-This project explores:
-- Graph Neural Networks (GNNs)
-- Message Passing
-- Aggregation and Update Functions
-- Node Embeddings
+- Graph Convolutional Networks (GCNs)
 - Node Classification
-- Graph Visualization
-- Multi Layer Perceptron (MLP)
-- Graph Convolutional Networks (GCN)
-- Embedding Visualization using t-SNE
-- PyTorch Geometric (PyG) Fundamentals
+- Graph Classification
+- Mini-Batch GNN Training
+- Cluster-GCN for Large Graphs
+- Message Passing
+- Graph Embedding Generation
+- Pooling Mechanisms
+- Embedding Visualization
+
+Datasets used:
+
+- Cora
+- PubMed
+- MUTAG
 
 ---
 
-# What are Graph Neural Networks?
+# Table of Contents
 
-Graph Neural Networks are neural networks designed for graph data structures.
-
-A graph mainly consists of:
-- Nodes → objects/entities
-- Edges → relationships/connections between nodes
-
-Examples of graph data:
-- Social Networks
-- Citation Networks
-- Recommendation Systems
-- Molecular Structures
-- Web Networks
-- Road Networks
-
-Traditional neural networks process data independently, while GNNs allow nodes to learn from their neighboring connected nodes.
+1. Introduction
+2. Graph Neural Networks
+3. Mathematical Foundations
+4. Datasets
+5. Node Classification
+6. Graph Classification
+7. Cluster-GCN
+8. Training Pipeline
+9. Installation
+10. Usage
+11. References
 
 ---
 
-# Message Passing in GNN
+# Introduction
 
-The core idea behind Graph Neural Networks is **Message Passing**.
+Graph Neural Networks (GNNs) are deep learning models specifically designed for graph-structured data.
 
-In Message Passing:
-- each node gathers information from neighboring nodes
-- neighboring information is aggregated
-- node representation is updated iteratively
+Unlike traditional neural networks that operate on:
+- images
+- text
+- sequences
 
-General Message Passing Formula:
+GNNs operate on:
+- nodes
+- edges
+- graph structures
 
-$$
-h_v^{(k)} = UPDATE^{(k)} \left( h_v^{(k-1)}, AGGREGATE^{(k)} \left( \{ h_u^{(k-1)} : u \in N(v) \} \right) \right)
-$$
+Applications include:
+- social networks
+- citation networks
+- molecular graphs
+- recommendation systems
+- biological networks
+
+---
+
+# Graph Neural Networks
+
+A graph is represented as:
+
+```math
+G = (V,E)
+```
 
 Where:
-- AGGREGATE → collects neighbor information
-- UPDATE → updates node representation
-- $\mathcal{N}(v)$ → neighboring nodes of node $v$
+
+- \(V\) = set of nodes
+- \(E\) = set of edges
+
+Each node contains a feature vector:
+
+```math
+x_v \in \mathbb{R}^d
+```
+
+Where:
+- \(x_v\) is node feature vector
+- \(d\) is feature dimension
 
 ---
 
-# Dataset Used
+# Graph Convolution
 
-## 1. Zachary's Karate Club Network
+Graph Convolutional Networks update node representations using neighborhood information.
 
-A classical social network dataset used for community detection.
+GCN propagation rule:
 
-Features:
-- 34 nodes
-- Social relationship graph
-- Community detection problem
+```math
+H^{(l+1)} =
+\sigma
+\left(
+\hat{D}^{-1/2}
+\hat{A}
+\hat{D}^{-1/2}
+H^{(l)}
+W^{(l)}
+\right)
+```
 
----
+Where:
 
-## 2. Cora Citation Network
-
-A benchmark graph dataset used for Node Classification.
-
-In the Cora dataset:
-- Nodes represent research papers
-- Edges represent citation links
-- Features represent important words inside documents
-
-Dataset Statistics:
-- 2708 Nodes
-- 5429 Edges
-- 1433 Input Features
-- 7 Output Classes
+- \(\hat{A} = A + I\) is adjacency matrix with self-loops
+- \(\hat{D}\) is degree matrix
+- \(W^{(l)}\) are learnable weights
+- \(\sigma\) is activation function
 
 ---
 
-# Multi Layer Perceptron (MLP)
+# Message Passing
 
-Initially, a Multi Layer Perceptron (MLP) model was implemented for node classification.
+Nodes aggregate information from neighbors:
 
-Architecture:
-- Linear Layer
-- ReLU Activation
-- Dropout
-- Linear Output Layer
+```math
+h_v^{(k+1)} =
+\text{UPDATE}^{(k)}
+\left(
+h_v^{(k)},
+\sum_{u \in N(v)}
+\text{MESSAGE}^{(k)}
+(h_v^{(k)}, h_u^{(k)})
+\right)
+```
 
-Workflow:
+Where:
+- \(N(v)\) denotes neighbors of node \(v\)
+
+---
+
+# Activation Function
+
+ReLU activation:
+
+```math
+f(x)=\max(0,x)
+```
+
+Used to introduce non-linearity.
+
+---
+
+# Dropout
+
+Dropout randomly disables neurons during training:
+
+```math
+\text{Dropout}(x)=x \cdot m
+```
+
+Where:
+- \(m\) is random binary mask
+
+Purpose:
+- reduce overfitting
+- improve generalization
+
+---
+
+# Datasets
+
+## 1. Cora
+
+Citation network dataset.
+
+### Properties
+- Nodes: Research Papers
+- Edges: Citations
+- Task: Node Classification
+
+---
+
+## 2. PubMed
+
+Biomedical citation graph.
+
+### Properties
+- Nodes: Scientific Papers
+- Edges: Citations
+- Task: Node Classification
+
+---
+
+## 3. MUTAG
+
+Molecular graph dataset.
+
+### Properties
+- Nodes: Atoms
+- Edges: Chemical Bonds
+- Task: Graph Classification
+
+---
+
+# Node Classification using GCN
+
+Node classification predicts labels for individual nodes.
+
+Pipeline:
 
 ```text
-Input Features
-      ↓
-Linear Layer
-      ↓
-ReLU Activation
-      ↓
+Node Features
+↓
+GCN Layer
+↓
+Neighbor Aggregation
+↓
+ReLU
+↓
 Dropout
-      ↓
-Linear Layer
-      ↓
-Output Classes
+↓
+GCN Layer
+↓
+Class Scores
 ```
 
 ---
 
-# Limitation of MLP
+# Node Classification Model
 
-Although the MLP model was able to learn node features, it performed poorly on graph structured data.
+```python
+class GCN(torch.nn.Module):
+    def __init__(self, hidden_channels):
+        super(GCN, self).__init__()
 
-Main limitations:
-- treats each node independently
-- ignores graph structure
-- does not use neighboring node information
-- suffers from overfitting
-- weak node embeddings
+        self.conv1 = GCNConv(
+            dataset.num_node_features,
+            hidden_channels
+        )
 
-The MLP model achieved approximately:
-- ~59% Test Accuracy
+        self.conv2 = GCNConv(
+            hidden_channels,
+            dataset.num_classes
+        )
 
-Visualization showed:
-- scattered embeddings
-- weak class separation
-- mixed node clusters
+    def forward(self, x, edge_index):
+
+        x = self.conv1(x, edge_index)
+        x = x.relu()
+
+        x = F.dropout(
+            x,
+            p=0.5,
+            training=self.training
+        )
+
+        x = self.conv2(x, edge_index)
+
+        return x
+```
 
 ---
 
-# Graph Convolutional Network (GCN)
+# Graph Classification using GCN
 
-To overcome the limitations of MLP, a Graph Convolutional Network (GCN) was implemented.
+Graph classification predicts labels for entire graphs.
 
-Unlike MLP, GCN learns using:
-- node features
-- neighboring node information
-- graph connectivity structure
-
-Architecture:
-- GCNConv Layer
-- ReLU Activation
-- Dropout
-- GCNConv Output Layer
-
-Workflow:
+Pipeline:
 
 ```text
-Node Features + Edge Connections
-              ↓
-         GCNConv
-              ↓
-       ReLU Activation
-              ↓
-           Dropout
-              ↓
-         GCNConv
-              ↓
-        Output Classes
+Node Features
+↓
+GCN Layers
+↓
+Node Embeddings
+↓
+Global Mean Pooling
+↓
+Graph Embedding
+↓
+Linear Classifier
+↓
+Graph Prediction
 ```
 
 ---
 
-# Why GCN Performs Better
+# Pooling Layer
 
-GCN uses neighborhood aggregation through Message Passing.
+Global Mean Pooling:
 
-Each node:
-- collects information from neighboring nodes
-- aggregates neighbor features
-- updates its representation
+```math
+h_G =
+\frac{1}{|V|}
+\sum_{v \in V}
+h_v
+```
 
-This allows the model to learn:
-- graph structure
-- semantic relationships
-- neighborhood patterns
-- meaningful embeddings
+Converts:
+- many node embeddings
+- into one graph embedding
 
 ---
 
-# Performance Improvement using GCN
+# Graph Classification Model
 
-The transition from MLP to GCN resulted in significant performance improvement.
+```python
+class GCN(torch.nn.Module):
 
-Improvements observed:
-- better node embeddings
-- stronger class separation
-- improved generalization
-- reduced overfitting
-- more meaningful graph representations
+    def __init__(self, hidden_channels):
+        super(GCN, self).__init__()
 
-Visualization after training clearly showed:
-- compact node clusters
-- better embedding organization
-- improved class boundaries
+        self.conv1 = GCNConv(
+            dataset.num_node_features,
+            hidden_channels
+        )
 
-This demonstrates the effectiveness of Graph Neural Networks for graph based learning tasks.
+        self.conv2 = GCNConv(
+            hidden_channels,
+            hidden_channels
+        )
+
+        self.conv3 = GCNConv(
+            hidden_channels,
+            hidden_channels
+        )
+
+        self.lin = Linear(
+            hidden_channels,
+            dataset.num_classes
+        )
+
+    def forward(self, x, edge_index, batch):
+
+        x = self.conv1(x, edge_index)
+        x = x.relu()
+
+        x = self.conv2(x, edge_index)
+        x = x.relu()
+
+        x = self.conv3(x, edge_index)
+
+        x = global_mean_pool(x, batch)
+
+        x = F.dropout(
+            x,
+            p=0.5,
+            training=self.training
+        )
+
+        x = self.lin(x)
+
+        return x
+```
+
+---
+
+# Cluster-GCN for Large Graphs
+
+Large graphs cannot always fit into GPU memory.
+
+Cluster-GCN solves this by:
+- partitioning large graphs
+- training on graph clusters
+
+---
+
+# Graph Partitioning
+
+```python
+cluster_data = ClusterData(
+    data,
+    num_parts=128
+)
+```
+
+This divides:
+- one large graph
+- into 128 subgraphs
+
+---
+
+# Cluster Loader
+
+```python
+train_loader = ClusterLoader(
+    cluster_data,
+    batch_size=32,
+    shuffle=True
+)
+```
+
+This creates:
+- mini-batches of graph partitions
+
+---
+
+# Training Pipeline
+
+Training workflow:
+
+```text
+Forward Pass
+↓
+Loss Computation
+↓
+Backpropagation
+↓
+Gradient Update
+↓
+Repeat
+```
+
+---
+
+# Cross Entropy Loss
+
+Used for classification tasks:
+
+```math
+L = - \sum_{i=1}^{C} y_i \log(\hat{y}_i)
+```
+
+Where:
+- \(y_i\) = true label
+- \(\hat{y}_i\) = predicted probability
+
+---
+
+# Accuracy
+
+Accuracy metric:
+
+```math
+Accuracy =
+\frac{
+\text{Correct Predictions}
+}{
+\text{Total Predictions}
+}
+```
 
 ---
 
 # Embedding Visualization
 
-t-SNE visualization was used to project high-dimensional node embeddings into 2D space.
+t-SNE is used for visualizing learned embeddings in 2D space.
 
-Visualization helps analyze:
-- cluster formation
-- node similarity
-- embedding quality
-- class separation
+Pipeline:
 
----
-
-# Technologies and Libraries Used
-
-- Python
-- PyTorch
-- PyTorch Geometric (PyG)
-- NetworkX
-- Matplotlib
-- Scikit-learn
+```text
+High-Dimensional Embeddings
+↓
+t-SNE
+↓
+2D Projection
+↓
+Visualization
+```
 
 ---
 
 # Installation
 
+## Clone Repository
+
+```bash
+git clone https://github.com/yourusername/your-repository-name.git
+cd your-repository-name
+```
+
+---
+
+# Install Dependencies
+
 ```bash
 pip install torch
 pip install torch-geometric
-pip install networkx
 pip install matplotlib
 pip install scikit-learn
 ```
 
 ---
 
-# Project Goals
+# Usage
 
-The main objectives of this repository are:
-- Understanding Graph Neural Networks
-- Learning Message Passing
-- Implementing Node Classification
-- Understanding Graph Embeddings
-- Learning Graph Representation Learning
-- Exploring PyTorch Geometric
-- Comparing MLP and GCN architectures
+## Run Node Classification
+
+```bash
+python node_classification.py
+```
 
 ---
 
-# Real World Applications of GNNs
+## Run Graph Classification
 
-Graph Neural Networks are widely used in:
-- Social Network Analysis
-- Recommendation Systems
-- Fraud Detection
-- Citation Networks
-- Knowledge Graphs
-- Molecular Chemistry
-- Traffic Prediction
-- Protein Interaction Networks
+```bash
+python graph_classification.py
+```
 
 ---
 
-# Future Improvements
+## Run Cluster-GCN
 
-Possible future extensions:
-- Graph Attention Networks (GAT)
-- GraphSAGE
-- Heterogeneous Graph Learning
-- Dynamic Graphs
-- Link Prediction
-- Graph Level Classification
+```bash
+python cluster_gcn.py
+```
 
 ---
 
-# Conclusion
+# Technologies Used
 
-This project demonstrates how Graph Neural Networks outperform traditional neural networks on graph structured data.
+- PyTorch
+- PyTorch Geometric
+- NumPy
+- Matplotlib
+- Scikit-Learn
 
-By incorporating neighborhood information and graph connectivity, GCN models generate more meaningful node embeddings and achieve significantly better node classification performance compared to standard MLP models.
+---
 
-The repository serves as a beginner-friendly introduction to Graph Neural Networks and Graph Representation Learning using PyTorch Geometric.
+# Learning Outcomes
+
+This project demonstrates:
+
+- Graph Representation Learning
+- Message Passing in GNNs
+- Node Embedding Generation
+- Graph Embedding Generation
+- Mini-Batch GNN Training
+- Scalable Graph Learning
+- Pooling Mechanisms
+- Graph Classification
+- Node Classification
 
 ---
 
 # References
 
-- PyTorch Geometric Documentation
-- Kipf & Welling (2017) — Semi-Supervised Classification with Graph Convolutional Networks
-- Cora Citation Network Dataset
-- Zachary Karate Club Dataset
+## Papers
+
+1. Semi-Supervised Classification with Graph Convolutional Networks  
+2. FastGCN  
+3. Cluster-GCN  
+4. Graph Neural Networks: A Review of Methods and Applications
+
+---
+
+# License
+
+This project is open-source and available under the MIT License.
